@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>拯救地球！你做得到嗎？</title>
+
+  <style>
+    @font-face {
+      font-family: 'Minecraftia';
+      src: url('https://cdn.jsdelivr.net/gh/robin-herbots/fontface-minecraftia/Minecraftia.ttf') format('truetype');
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Minecraftia', monospace, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .background-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-size: cover;
+      background-position: center;
+      z-index: -2;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #runner {
+      transition: left 0.3s ease;
+      position: absolute;
+      bottom: 120px;
+      left: 50px;
+      width: 180px; /* 🏃🏽‍♂️ 跑者變大 */
+      z-index: 1;
+    }
+
+
+    #startScreen, #instructionScreen, #gameUI, #endScreen, #characterSelectScreen {
+      position: relative;
+      z-index: 2;
+      padding: 20px;
+      text-align: center;
+    }
+
+    /* 所有按鈕預設是直式 */
+    .button-container {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+
+    /* 遊戲介面裡的按鈕改為水平排列 */
+    #gameUI .button-container {
+      flex-direction: row;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 14px 28px;
+      margin: 8px;
+      font-size: 22px;
+      cursor: pointer;
+      background-color: #4caf50;
+      color: white;
+      border: 2px solid #2e7d32;
+      border-radius: 8px;
+      font-family: 'Minecraftia', monospace, sans-serif;
+      box-shadow: 3px 3px #1b5e20;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #66bb6a;
+      box-shadow: 4px 4px #1b5e20;
+    }
+
+    #earthImg {
+      width: 200px;
+      margin-top: 20px;
+    }
+    #startScreen h1 {
+     font-size: 40px; /* 想要多大調整這裡 */
+    color: #ff0000;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+    #question {
+      font-size: 40px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+
+    #timer {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #d32f2f;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    #endScreen {
+      position: relative;
+      text-align: center;
+      padding-top: 60px; /* 避開按鈕高度 */
+    }
+
+    #endScreen #lose {
+      display: block;
+      margin: 0 auto;
+      width: 400px;
+    }
+
+    #endScreen #trophy {
+      display: block;
+      margin: 0 auto;
+      width: 400px;  /* 想要的大小 */
+    }
+
+    #endScreen button {
+      position: relative;
+      top: auto;
+      right: auto;
+      padding: 8px 15px;
+      font-size: 16px;
+      border-radius: 6px;
+      margin: 0 10px;
+      box-shadow: 2px 2px #1b5e20;
+    }
+
+    /* 彩帶容器 */
+    #confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 1000;
+    }
+
+    /* 彩帶小方塊 */
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: red;
+      opacity: 0.9;
+      will-change: transform, opacity;
+      border-radius: 2px;
+      box-shadow: 0 0 2px rgba(0,0,0,0.3);
+    }
+
+    /* 角色選擇按鈕圖片 */
+    #characterGrid button {
+      border: 2px solid #2e7d32;
+      border-radius: 10px;
+      padding: 5px;
+      background: #4caf50;
+      cursor: pointer;
+      width: 90px;
+      height: 90px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+
+    #characterGrid button img {
+      width: 80px;
+      height: 80px;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 背景層 -->
+  <div id="backgroundLayer" class="background-layer" style="background-image: url('assets/background.jpg');"></div>
+  <div id="trackLayer" class="background-layer hidden" style="background-image: url('assets/background2.jpg'); z-index: -2;"></div>
+
+  <!-- 跑者 -->
+  <img id="runner" src="assets/runner1.gif" alt="跑者" style="display: none;" />
+
+  <!-- 封面畫面 -->
+  <div id="startScreen">
+    <h1>🌍 拯救地球！你做得到嗎？</h1>
+    <div class="button-container">
+      <button onclick="startGame()">🚀 開始遊戲</button>
+      <button onclick="showInstructions()">📘 介紹玩法</button>
+      <button onclick="showCharacterSelect()">🎮 選擇角色</button>
+    </div>
+  </div>
+
+  <!-- 玩法說明 -->
+  <div id="instructionScreen" class="hidden">
+    <h2>🌍《拯救地球！你做得到嗎？》遊戲說明</h2>
+    <p>選擇一位角色，準備好你的環保知識吧！</p>
+    <p>畫面會出現一個情境，請判斷這個行為是「好行為」還是「壞行為」。</p>
+    <p>每答對一題，你就幫地球更健康一點；答錯則會讓地球變糟！</p>
+    <p> 全部答完就看看你能拯救地球到什麼程度！</p>
+
+
+    <button onclick="backToStart()">⬅️ 返回封面</button>
+  </div>
+
+  <!-- 遊戲介面 -->
+  <div id="gameUI" class="hidden">
+    <div id="question"></div>
+    <div class="button-container">
+      <button id="yesBtn" onclick="answer(true)">♻️ 是的，這很環保</button>
+      <button id="noBtn" onclick="answer(false)">🛑 不，這不環保</button>
+    </div>
+    <div id="timer">⏱️ 時間剩下：10 秒</div>
+    <img id="earthImg" src="assets/neutral-earth.gif" alt="地球狀態" />
+    <div id="message"></div>
+  </div>
+
+  <!-- 選擇角色畫面 -->
+  <div id="characterSelectScreen" class="hidden">
+    <h2>🎮 選擇你的角色</h2>
+    <div id="characterGrid" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+      <!-- 角色按鈕會由 JavaScript 動態產生 -->
+    </div>
+    <button onclick="backToStart()">⬅️ 返回首頁</button>
+  </div>
+
+  <!-- 結束畫面 -->
+  <div id="endScreen" class="hidden">
+    <h2 id="finalScore"></h2>
+    <img id="trophy" src="assets/trophy.png" alt="獎盃" style="display: none;" />
+    <img id="lose" src="assets/lose.jpg" alt="失敗" style="display: none;" />
+    <div class="button-container">
+      <button onclick="backToStart()">⬅️ 返回首頁</button>
+      <button onclick="startGame()">🔄 再玩一次</button>
+    </div>
+  </div>
+
+  <!-- 彩帶容器 -->
+  <div id="confetti"></div>
+
+  <!-- 音樂 -->
+  <audio id="bgMusic" src="assets/bg-music.mp3" loop></audio>
+  <!-- 新增音效 -->
+  <audio id="correctSound" src="assets/correct.mp3"></audio>
+  <audio id="wrongSound" src="assets/wrong.mp3"></audio>
+
+  <!-- 遊戲邏輯 -->
+  <script>
+    const questions = [
+      { text: "騎腳踏車上下學是一種環保的行為。", isGood: true },
+      { text: "長時間使用冷氣有助於節能減碳。", isGood: false },
+      { text: "使用環保杯可以減少一次性垃圾。", isGood: true },
+      { text: "每天喝瓶裝水比使用水壺更環保。", isGood: false },
+      { text: "自己開車比搭捷運更能保護環境。", isGood: false },
+      { text: "使用太陽能是潔淨能源的一種方式。", isGood: true },
+      { text: "使用免洗筷不會影響環境。", isGood: false },
+      { text: "用購物袋代替塑膠袋是一種綠色行為。", isGood: true },
+      { text: "多買衣服有助於減少資源浪費。", isGood: false },
+      { text: "垃圾分類可以讓資源被更有效地再利用。", isGood: true }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let countdown;
+    let runner = document.getElementById("runner");
+    let runnerPos = 50;
+
+    // 預設角色
+    let selectedCharacterSrc = "assets/runner8.gif";
+
+    // 角色圖片陣列
+    const characters = [
+      "assets/runner1.gif",
+      "assets/runner2.gif",
+      "assets/runner3.gif",
+      "assets/runner4.gif",
+      "assets/runner5.gif",
+      "assets/runner6.gif",
+      "assets/runner7.gif",
+      "assets/runner8.gif"
+    ];
+
+    // 載入角色選擇按鈕
+    function loadCharacterOptions() {
+      const container = document.getElementById("characterGrid");
+      container.innerHTML = ''; // 清空
+
+      characters.forEach((src, i) => {
+        const btn = document.createElement("button");
+
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = `角色${i + 1}`;
+
+        btn.appendChild(img);
+
+        btn.onclick = () => {
+          selectedCharacterSrc = src;
+          runner.src = selectedCharacterSrc;
+          runner.style.display = "block";
+          document.getElementById("characterSelectScreen").classList.add("hidden");
+          document.getElementById("startScreen").classList.remove("hidden");
+        };
+
+        container.appendChild(btn);
+      });
+    }
+
+    // 顯示角色選擇頁面
+    function showCharacterSelect() {
+      document.getElementById("startScreen").classList.add("hidden");
+      document.getElementById("characterSelectScreen").classList.remove("hidden");
+      loadCharacterOptions();
+    }
+
+    // 返回首頁
+    function backToStart() {
+      clearInterval(countdown);
+      document.getElementById("gameUI").classList.add("hidden");
+      document.getElementById("instructionScreen").classList.add("hidden");
+      document.getElementById("endScreen").classList.add("hidden");
+      document.getElementById("characterSelectScreen").classList.add("hidden");
+      document.getElementById("startScreen").classList.remove("hidden");
+      runner.style.display = "block";
+      runner.src = selectedCharacterSrc;
+      document.getElementById("backgroundLayer").style.display = "block";
+      document.getElementById("trackLayer").classList.add("hidden");
+    }
+
+    // 顯示玩法說明
+    function showInstructions() {
+      document.getElementById("startScreen").classList.add("hidden");
+      document.getElementById("instructionScreen").classList.remove("hidden");
+    }
+
+    // 開始遊戲
+    function startGame() {
+      score = 0;
+      current = 0;
+      runnerPos = 50;
+      document.getElementById("startScreen").classList.add("hidden");
+      document.getElementById("instructionScreen").classList.add("hidden");
+      document.getElementById("endScreen").classList.add("hidden");
+      document.getElementById("characterSelectScreen").classList.add("hidden");
+      document.getElementById("gameUI").classList.remove("hidden");
+      document.getElementById("backgroundLayer").style.display = "none";
+      document.getElementById("trackLayer").classList.remove("hidden");
+      runner.style.display = "block";
+      runner.src = selectedCharacterSrc;
+      runner.style.left = runnerPos + "px";
+      nextQuestion();
+      playBgMusic();
+    }
+
+    // 顯示下一題
+    function nextQuestion() {
+      if (current >= questions.length) {
+        endGame();
+        return;
+      }
+      document.getElementById("message").textContent = "";
+      const q = questions[current];
+      document.getElementById("question").textContent = q.text;
+      resetTimer(10);
+    }
+
+    // 計時器相關
+    function resetTimer(seconds) {
+      clearInterval(countdown);
+      let timeLeft = seconds;
+      document.getElementById("timer").textContent = `⏱️ 時間剩下：${timeLeft} 秒`;
+      countdown = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+          answer(null); // 超時沒答視為錯誤
+        } else {
+          document.getElementById("timer").textContent = `⏱️ 時間剩下：${timeLeft} 秒`;
+        }
+      }, 1000);
+    }
+
+    // 玩家答題
+    function answer(ans) {
+      clearInterval(countdown);
+      const correct = questions[current].isGood;
+      const earthImg = document.getElementById("earthImg");
+      const message = document.getElementById("message");
+      earthImg.style.width = "200px";  // 答對或答錯都放大
+
+      if (ans === correct) {
+        score++;
+        document.getElementById("correctSound").play();
+        earthImg.src = "assets/happy-earth.png";
+        message.textContent = "答對了！地球開心了！🌱";
+        runnerPos += 120; // 跑者往前跑
+        runner.style.left = runnerPos + "px";
+      } else {
+        document.getElementById("wrongSound").play();
+        earthImg.src = "assets/sad-earth.png";
+        message.textContent = "答錯了，地球難過了...😢";
+      }
+      current++;
+      setTimeout(() => {
+        earthImg.src = "assets/neutral-earth.gif";
+        message.textContent = "";
+        nextQuestion();
+      }, 1500);
+    }
+
+    // 遊戲結束
+    function endGame() {
+      document.getElementById("gameUI").classList.add("hidden");
+      const endScreen = document.getElementById("endScreen");
+      endScreen.classList.remove("hidden");
+      const trophy = document.getElementById("trophy");
+      const lose = document.getElementById("lose");
+      const finalScore = document.getElementById("finalScore");
+
+      finalScore.textContent = `你的分數：${score} / ${questions.length}`;
+
+      if (score >= 10) {
+        trophy.style.display = "block";
+        lose.style.display = "none";
+        startConfetti();
+      } else {
+        trophy.style.display = "none";
+        lose.style.display = "block";
+      }
+
+      stopBgMusic();
+    }
+
+    // 背景音樂
+    const bgMusic = document.getElementById("bgMusic");
+    function playBgMusic() {
+      bgMusic.volume = 0.8;
+      bgMusic.play();
+    }
+    function stopBgMusic() {
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+    }
+
+    // 彩帶效果
+    const confettiContainer = document.getElementById("confetti");
+    let confettiPieces = [];
+    let confettiAnimationId;
+
+    function startConfetti() {
+      confettiContainer.innerHTML = '';
+      confettiPieces = [];
+      for(let i=0; i<100; i++){
+        const piece = document.createElement("div");
+        piece.classList.add("confetti-piece");
+        piece.style.backgroundColor = `hsl(${Math.random()*360}, 70%, 60%)`;
+        piece.style.left = Math.random() * window.innerWidth + "px";
+        piece.style.top = (Math.random() * -window.innerHeight) + "px";
+        piece.speed = 1 + Math.random() * 3;
+        piece.x = parseFloat(piece.style.left);
+        piece.y = parseFloat(piece.style.top);
+        piece.rotation = Math.random() * 360;
+        piece.rotationSpeed = (Math.random() - 0.5) * 10;
+        confettiContainer.appendChild(piece);
+        confettiPieces.push(piece);
+      }
+      animateConfetti();
+      setTimeout(stopConfetti, 7000);
+    }
+
+    function animateConfetti(){
+      confettiAnimationId = requestAnimationFrame(animateConfetti);
+      confettiPieces.forEach(piece=>{
+        piece.y += piece.speed;
+        piece.rotation += piece.rotationSpeed;
+        if(piece.y > window.innerHeight){
+          piece.y = Math.random() * -window.innerHeight;
+          piece.x = Math.random() * window.innerWidth;
+        }
+        piece.style.transform = `translate(${piece.x}px, ${piece.y}px) rotate(${piece.rotation}deg)`;
+      });
+    }
+
+    function stopConfetti(){
+      cancelAnimationFrame(confettiAnimationId);
+      confettiContainer.innerHTML = '';
+    }
+
+    // 一開始顯示封面及跑者
+    window.onload = () => {
+      runner.style.display = "block";
+      runner.src = selectedCharacterSrc;
+    };
+  </script>
+</body>
+</html>

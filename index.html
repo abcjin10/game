@@ -5,6 +5,22 @@
   <title>拯救地球！你做得到嗎？</title>
 
   <style>
+@keyframes fallDown {
+  0% {
+    bottom: 120px;
+    transform: rotate(0deg) scaleY(1);
+  }
+  100% {
+    bottom: -250px;
+    transform: rotate(720deg) scaleY(1.2);
+  }
+}
+
+.fall {
+  animation: fallDown 1.0s forwards ease-in;
+}
+
+
     @font-face {
       font-family: 'Minecraftia';
       src: url('https://cdn.jsdelivr.net/gh/robin-herbots/fontface-minecraftia/Minecraftia.ttf') format('truetype');
@@ -188,6 +204,9 @@
       height: 80px;
       pointer-events: none;
       user-select: none;
+
+
+
     }
   </style>
 </head>
@@ -263,6 +282,10 @@
   <!-- 新增音效 -->
   <audio id="correctSound" src="assets/correct.mp3"></audio>
   <audio id="wrongSound" src="assets/wrong.mp3"></audio>
+  <audio id="winSound" src="assets/win.mp4" preload="auto"></audio>
+  <audio id="loseSound" src="assets/lose.mov" preload="auto"></audio>
+
+
 
   <!-- 遊戲邏輯 -->
   <script>
@@ -413,7 +436,7 @@
         document.getElementById("correctSound").play();
         earthImg.src = "assets/happy-earth.png";
         message.textContent = "答對了！地球開心了！🌱";
-        runnerPos += 120; // 跑者往前跑
+        runnerPos += 130; // 跑者往前跑
         runner.style.left = runnerPos + "px";
       } else {
         document.getElementById("wrongSound").play();
@@ -425,7 +448,7 @@
         earthImg.src = "assets/neutral-earth.gif";
         message.textContent = "";
         nextQuestion();
-      }, 1500);
+      }, 1200);
     }
 
     // 遊戲結束
@@ -443,9 +466,23 @@
         trophy.style.display = "block";
         lose.style.display = "none";
         startConfetti();
+        document.getElementById("winSound").play();//
+           // 確保跑者正常顯示
+          runner.style.display = "block";
+          runner.classList.remove("fall");
       } else {
         trophy.style.display = "none";
         lose.style.display = "block";
+        document.getElementById("loseSound").play();  // 失敗音效
+         // 跑者掉落動畫
+          runner.classList.add("fall");
+    
+          // 掉落動畫結束後隱藏跑者
+          runner.addEventListener('animationend', () => {
+          runner.style.display = "none";
+          runner.classList.remove("fall");  // 清除 class 以便下一次遊戲重新使用
+      }, { once: true });
+
       }
 
       stopBgMusic();
